@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { DayId, Speaker, TrackId, Session } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
-import { DayId, TrackId } from '../../core/models/conference.models';
 
 type DayFilter = DayId | 'all';
 type TrackFilter = TrackId | 'all';
@@ -276,8 +276,13 @@ export class ScheduleComponent {
   protected dayFilter: DayFilter = 'all';
   protected trackFilter: TrackFilter = 'all';
 
-  private readonly sessions = signal(this.data.getSessions());
-  private readonly speakers = signal(this.data.getSpeakers());
+  private readonly sessions = signal<Session[]>([]);
+  private readonly speakers = signal<Speaker[]>([]);
+
+  constructor() {
+    this.data.getSessions().subscribe((s) => this.sessions.set(s));
+    this.data.getSpeakers().subscribe((s) => this.speakers.set(s));
+  }
 
   readonly filteredSessions = computed(() => {
     const d = this.dayFilter;

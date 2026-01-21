@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 import { TicketOrderConfirmation, TicketOrderDraft, TicketType } from '../../core/models/conference.models';
@@ -407,14 +407,26 @@ export class TicketsComponent {
   private readonly data = inject(ConferenceDataService);
   private readonly purchase = inject(TicketPurchaseService);
 
-  protected readonly ticketTypes = signal(this.data.getTicketTypes());
-
-  private draft = signal<TicketOrderDraft>(this.purchase.getDefaultDraft(this.ticketTypes()));
+  protected readonly ticketTypes = signal<TicketType[]>([]);
+  private draft = signal<TicketOrderDraft>({ email: '', items: [] });
   protected draftEmail = '';
 
   protected readonly confirmation = signal<TicketOrderConfirmation | null>(null);
 
-  readonly totalUsd = computed(() => this.purchase.calculateTotalUsd({ ...this.draft(), email: this.draftEmail }));
+  constructor() {
+    this.data.getTicketTypes().subscribe((types) => {
+      this.ticketTypes.set(types);
+      // Initialize draft once we have the ticket catalog.
+      if (!this.draft().items.length) {
+        this.draft.set(this.purchase.getDefaultDraft(types));
+      }
+    });
+  }
+
+  readonly totalUsd = computed(() =>
+    this.purchase.calculateTotalUsd(this.ticketTypes(), { ...this.draft(), email: this.draftEmail }),
+  );
+
   readonly summaryLines = computed(() => {
     const types = this.ticketTypes();
     const d = this.draft();
@@ -455,7 +467,7 @@ export class TicketsComponent {
 
     if (!this.canCheckout()) return;
 
-    this.confirmation.set(this.purchase.createConfirmation(draft));
+    this.confirmation.set(this.purchase.createConfirmation(this.ticketTypes(), draft));
   }
 
   reset() {

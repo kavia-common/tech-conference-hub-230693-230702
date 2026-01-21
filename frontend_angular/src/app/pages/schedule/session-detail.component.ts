@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Session, Speaker } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 
 @Component({
@@ -237,14 +238,28 @@ export class SessionDetailComponent {
 
   private readonly sessionId = computed(() => this.route.snapshot.paramMap.get('id') ?? '');
 
-  readonly session = computed(() => this.data.getSessionById(this.sessionId()));
-  readonly speakers = computed(() => {
-    const s = this.session();
-    if (!s) return [];
-    return s.speakerIds
-      .map((id) => this.data.getSpeakerById(id))
-      .filter((x): x is NonNullable<typeof x> => Boolean(x));
-  });
+  protected readonly session = signal<Session | null>(null);
+  protected readonly speakers = signal<Speaker[]>([]);
+
+  constructor() {
+    const id = this.sessionId();
+
+    this.data.getSessionById(id).subscribe((s) => {
+      this.session.set(s);
+
+      if (!s) {
+        this.speakers.set([]);
+        return;
+      }
+
+      // In API mode, speaker lookups might be better done server-side; for now, we resolve client-side.
+      this.data.getSpeakers().subscribe((all) => {
+        const byId = new Map(all.map((sp) => [sp.id, sp]));
+        const list = s.speakerIds.map((sid) => byId.get(sid)).filter((x): x is Speaker => Boolean(x));
+        this.speakers.set(list);
+      });
+    });
+  }
 
   dayLabel(day: 'day-1' | 'day-2'): string {
     return day === 'day-1' ? 'Day 1' : 'Day 2';

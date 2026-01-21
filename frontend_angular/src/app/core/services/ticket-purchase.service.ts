@@ -1,31 +1,25 @@
 import { Injectable } from '@angular/core';
 import { TicketOrderConfirmation, TicketOrderDraft, TicketType } from '../models/conference.models';
-import { ConferenceDataService } from './conference-data.service';
 
 @Injectable({ providedIn: 'root' })
 export class TicketPurchaseService {
-  constructor(private readonly data: ConferenceDataService) {}
-
   // PUBLIC_INTERFACE
-  calculateTotalUsd(draft: TicketOrderDraft): number {
-    /** Calculate total from draft (stub). */
-    const types = this.data.getTicketTypes();
+  calculateTotalUsd(ticketTypes: TicketType[], draft: TicketOrderDraft): number {
+    /** Calculate total from draft using the provided ticket type catalog. */
     return draft.items.reduce((sum, item) => {
-      const tt = types.find((t) => t.id === item.ticketTypeId);
+      const tt = ticketTypes.find((t) => t.id === item.ticketTypeId);
       const price = tt?.priceUsd ?? 0;
       return sum + price * item.quantity;
     }, 0);
   }
 
   // PUBLIC_INTERFACE
-  createConfirmation(draft: TicketOrderDraft): TicketOrderConfirmation {
-    /** Create a mock confirmation (no payment). */
-    const types = this.data.getTicketTypes();
-
+  createConfirmation(ticketTypes: TicketType[], draft: TicketOrderDraft): TicketOrderConfirmation {
+    /** Create a mock confirmation (no payment) using the provided ticket type catalog. */
     const lineItems = draft.items
       .filter((i) => i.quantity > 0)
       .map((i) => {
-        const tt = types.find((t) => t.id === i.ticketTypeId);
+        const tt = ticketTypes.find((t) => t.id === i.ticketTypeId);
         return {
           ticketName: tt?.name ?? 'Ticket',
           unitPriceUsd: tt?.priceUsd ?? 0,

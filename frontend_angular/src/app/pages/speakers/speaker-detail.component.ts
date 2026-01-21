@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Session, Speaker } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 
 @Component({
@@ -299,8 +300,14 @@ export class SpeakerDetailComponent {
 
   private readonly speakerId = computed(() => this.route.snapshot.paramMap.get('id') ?? '');
 
-  readonly speaker = computed(() => this.data.getSpeakerById(this.speakerId()));
-  readonly sessions = computed(() => this.data.getSessionsForSpeaker(this.speakerId()));
+  protected readonly speaker = signal<Speaker | null>(null);
+  protected readonly sessions = signal<Session[]>([]);
+
+  constructor() {
+    const id = this.speakerId();
+    this.data.getSpeakerById(id).subscribe((s) => this.speaker.set(s));
+    this.data.getSessionsForSpeaker(id).subscribe((sessions) => this.sessions.set(sessions));
+  }
 
   dayLabel(day: 'day-1' | 'day-2'): string {
     return day === 'day-1' ? 'Day 1' : 'Day 2';

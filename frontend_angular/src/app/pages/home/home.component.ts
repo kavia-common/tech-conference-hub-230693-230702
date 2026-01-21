@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { APP_CONFIG, AppConfig } from '../../core/config/app-config';
+import { Session, Speaker } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 
 @Component({
@@ -77,7 +78,7 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
           <div class="highlight__title">Featured session</div>
           <div class="highlight__name">{{ fs.title }}</div>
           <div class="highlight__meta">
-            <span class="pill">{{ featuredDayLabel() }}</span>
+            <span class="pill">{{ featuredDayLabel(fs.day) }}</span>
             <span class="pill pill--soft">
               {{ fs.startTime }}–{{ fs.endTime }}
             </span>
@@ -371,15 +372,22 @@ export class HomeComponent {
 
   readonly config: AppConfig = inject(APP_CONFIG);
 
-  readonly speakerCount = computed(() => this.data.getSpeakers().length);
-  readonly sessionCount = computed(() => this.data.getSessions().length);
+  protected readonly speakers = signal<Speaker[]>([]);
+  protected readonly sessions = signal<Session[]>([]);
+
+  constructor() {
+    // Subscribe once; HttpClient completes after one emission; SSR-safe.
+    this.data.getSpeakers().subscribe((s) => this.speakers.set(s));
+    this.data.getSessions().subscribe((s) => this.sessions.set(s));
+  }
+
+  readonly speakerCount = computed(() => this.speakers().length);
+  readonly sessionCount = computed(() => this.sessions().length);
   readonly dayCount = computed(() => this.data.getDays().length);
 
-  readonly featuredSession = computed(() => this.data.getSessions()[0] ?? null);
+  readonly featuredSession = computed(() => this.sessions()[0] ?? null);
 
-  featuredDayLabel(): string {
-    const s = this.featuredSession();
-    if (!s) return 'Day';
-    return s.day === 'day-1' ? 'Day 1' : 'Day 2';
+  featuredDayLabel(day: string): string {
+    return day === 'day-1' ? 'Day 1' : 'Day 2';
   }
 }

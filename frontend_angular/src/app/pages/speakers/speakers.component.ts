@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Speaker } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 
 @Component({
@@ -246,7 +247,11 @@ export class SpeakersComponent {
   private readonly data = inject(ConferenceDataService);
 
   protected query = '';
-  private readonly speakers = signal(this.data.getSpeakers());
+  private readonly speakers = signal<Speaker[]>([]);
+
+  constructor() {
+    this.data.getSpeakers().subscribe((s) => this.speakers.set(s));
+  }
 
   readonly filteredSpeakers = computed(() => {
     const q = this.query.trim().toLowerCase();

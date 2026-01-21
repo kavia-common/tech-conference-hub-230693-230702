@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { VenueInfo } from '../../core/models/conference.models';
 import { ConferenceDataService } from '../../core/services/conference-data.service';
 
 @Component({
@@ -10,24 +11,24 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
     <section class="page">
       <header class="hero">
         <div class="hero__badge">Venue</div>
-        <h1 class="hero__title">{{ venue.name }}</h1>
+        <h1 class="hero__title">{{ venue().name }}</h1>
         <p class="hero__subtitle">
           Everything you need to arrive relaxed, caffeinated, and ready to learn.
         </p>
       </header>
 
-      <div class="grid">
+      <div class="grid" *ngIf="venue() as v">
         <div class="card">
           <h2 class="h2">Location</h2>
           <div class="address">
-            <div *ngFor="let line of venue.addressLines">{{ line }}</div>
-            <div>{{ venue.cityRegion }}</div>
+            <div *ngFor="let line of v.addressLines">{{ line }}</div>
+            <div>{{ v.cityRegion }}</div>
           </div>
 
           <div class="map" role="img" aria-label="Map placeholder">
             <div class="map__inner">
               <div class="map__title">Map placeholder</div>
-              <div class="map__hint">{{ venue.mapHint }}</div>
+              <div class="map__hint">{{ v.mapHint }}</div>
               <div class="map__pins" aria-hidden="true">
                 <span class="pin pin--a"></span>
                 <span class="pin pin--b"></span>
@@ -39,14 +40,14 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
           <div class="contact">
             <div class="contact__item">
               <div class="label">Email</div>
-              <a class="link" [href]="'mailto:' + venue.contact.email" aria-label="Email conference support">
-                {{ venue.contact.email }}
+              <a class="link" [href]="'mailto:' + v.contact.email" aria-label="Email conference support">
+                {{ v.contact.email }}
               </a>
             </div>
             <div class="contact__item">
               <div class="label">Phone</div>
-              <a class="link" [href]="'tel:' + venue.contact.phone" aria-label="Call conference support">
-                {{ venue.contact.phone }}
+              <a class="link" [href]="'tel:' + v.contact.phone" aria-label="Call conference support">
+                {{ v.contact.phone }}
               </a>
             </div>
           </div>
@@ -55,7 +56,7 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
         <div class="card">
           <h2 class="h2">Travel tips</h2>
           <div class="tips">
-            <div class="tip" *ngFor="let t of venue.travelTips">
+            <div class="tip" *ngFor="let t of v.travelTips">
               <div class="tip__title">{{ t.title }}</div>
               <div class="tip__details">{{ t.details }}</div>
             </div>
@@ -69,7 +70,7 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
           </p>
 
           <ul class="list" aria-label="Accessibility features">
-            <li *ngFor="let a of venue.accessibility">{{ a }}</li>
+            <li *ngFor="let a of v.accessibility">{{ a }}</li>
           </ul>
 
           <div class="note" aria-label="Accessibility note">
@@ -157,7 +158,7 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
         margin-top: 12px;
         border-radius: 18px;
         border: 1px solid rgba(55, 65, 81, 0.12);
-        background: linear-gradient(135deg, rgba(70, 203, 236, 0.12), rgba(139, 92, 246, 0.10));
+        background: linear-gradient(135deg, rgba(70, 203, 236, 0.12), rgba(139, 92, 246, 0.1));
         overflow: hidden;
       }
 
@@ -313,5 +314,17 @@ import { ConferenceDataService } from '../../core/services/conference-data.servi
 export class VenueComponent {
   private readonly data = inject(ConferenceDataService);
 
-  protected readonly venue = this.data.getVenueInfo();
+  protected readonly venue = signal<VenueInfo>({
+    name: 'Loading…',
+    addressLines: [],
+    cityRegion: '',
+    mapHint: '',
+    travelTips: [],
+    accessibility: [],
+    contact: { email: '', phone: '' },
+  });
+
+  constructor() {
+    this.data.getVenueInfo().subscribe((v) => this.venue.set(v));
+  }
 }
