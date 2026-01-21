@@ -1,3 +1,22 @@
-<div class="container">
-  <h1>{{ title }}</h1>
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar__inner">
+      <a class="brand" routerLink="/" aria-label="Tech Conference Hub home">
+        <span class="brand__mark" aria-hidden="true"></span>
+        <span class="brand__name">Tech Conference Hub</span>
+      </a>
+
+      <nav class="nav" aria-label="Primary">
+        <a class="nav__link" routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a class="nav__link" routerLink="/speakers" routerLinkActive="is-active">Speakers</a>
+        <a class="nav__link" routerLink="/schedule" routerLinkActive="is-active">Schedule</a>
+        <a class="nav__link" routerLink="/tickets" routerLinkActive="is-active">Tickets</a>
+        <a class="nav__link" routerLink="/venue" routerLinkActive="is-active">Venue</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="content" role="main">
+    <router-outlet />
+  </main>
 </div>
