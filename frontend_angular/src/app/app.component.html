@@ -1,17 +1,41 @@
 <div class="app-shell">
   <header class="topbar" role="banner">
     <div class="topbar__inner">
-      <a class="brand" routerLink="/" aria-label="Tech Conference Hub home">
+      <a class="brand" routerLink="/" (click)="closeMobileNav()" aria-label="Tech Conference Hub home">
         <span class="brand__mark" aria-hidden="true"></span>
         <span class="brand__name">Tech Conference Hub</span>
       </a>
 
-      <nav class="nav" aria-label="Primary">
-        <a class="nav__link" routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-        <a class="nav__link" routerLink="/speakers" routerLinkActive="is-active">Speakers</a>
-        <a class="nav__link" routerLink="/schedule" routerLinkActive="is-active">Schedule</a>
-        <a class="nav__link" routerLink="/tickets" routerLinkActive="is-active">Tickets</a>
-        <a class="nav__link" routerLink="/venue" routerLinkActive="is-active">Venue</a>
+      <button
+        class="menu-btn"
+        type="button"
+        (click)="toggleMobileNav()"
+        [attr.aria-expanded]="mobileNavOpen()"
+        aria-controls="primaryNav"
+        aria-label="Toggle navigation menu"
+      >
+        <span class="menu-btn__icon" aria-hidden="true"></span>
+      </button>
+
+      <nav
+        id="primaryNav"
+        class="nav"
+        [class.nav--open]="mobileNavOpen()"
+        aria-label="Primary"
+      >
+        <a
+          class="nav__link"
+          routerLink="/"
+          (click)="closeMobileNav()"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Home
+        </a>
+        <a class="nav__link" routerLink="/speakers" (click)="closeMobileNav()" routerLinkActive="is-active">Speakers</a>
+        <a class="nav__link" routerLink="/schedule" (click)="closeMobileNav()" routerLinkActive="is-active">Schedule</a>
+        <a class="nav__link" routerLink="/tickets" (click)="closeMobileNav()" routerLinkActive="is-active">Tickets</a>
+        <a class="nav__link" routerLink="/venue" (click)="closeMobileNav()" routerLinkActive="is-active">Venue</a>
       </nav>
     </div>
   </header>
